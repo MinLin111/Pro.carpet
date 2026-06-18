@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # 1. Веб-сервер (Твой сайт)
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+
+  # 2. База данных MySQL (Мы вернули её на место)
+  db:
+    image: mysql:8.0
+    container_name: koverpro-db-1
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: koverpro_db # Убедись, что имя базы в config.php совпадает с этим
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  # 3. Панель управления phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: koverpro-phpmyadmin
+    restart: always
+    ports:
+      - "8085:80"
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:
